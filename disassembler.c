@@ -55,9 +55,9 @@ int main(int argc, char* argv[]) {
 			printf("U-type\n");
 			break;
 		case 111: // J-type
-			immj = (ins & 0x80000000); // bit 31
+			immj = (int32_t)(ins & 0x80000000) >> 11; // bit 31 (sign extended)
 			immj += (ins & 0x7FE00000)  >> 20; // bits 30 to 21
-			immj += (ins & 0x100000) << 9; // bit 20
+			immj += (ins & 0x100000) >> 9; // bit 20
 			immj += (ins & 0xff000); // bits 19 to 12
 			printf("0x%X: jal, %s, %d\n", address, regs[rd], immj);	
 			// since it's 5 bits, rd will never be out of the array's bounds
