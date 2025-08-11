@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <inttypes.h> 
 
+const char* regs[] = {"zero", "ra", "sp", "gp", "tp", "t0", "t1", "t2", "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"};
+
 int main(int argc, char* argv[]) {
 	if (argc != 2) {
 		printf("Usage: decomp path_to_program\n");
@@ -11,16 +13,30 @@ int main(int argc, char* argv[]) {
 
 	const char* path = argv[1];
 		
-	uint32_t buf = 0;
+	uint32_t ins = 0;
 
 	int fd = open(path, O_RDONLY);
 
-	while (read(fd, (uint8_t*) &buf, 4) != 0) {
-		uint8_t  opcode = buf & 0x7F; // first 6 bits
+	int address = 0;
+
+	uint8_t opcode;
+	uint8_t rd;
+	uint8_t funct3;
+	uint8_t funct7;
+	int32_t immj;
+
+	while (read(fd, (uint8_t*) &ins, 4) != 0) {
+		opcode = ins & 0x7F; // bits 0 to 6
+		rd = (ins & 0xF80) >> 7; // bits 7 to 11
 
 		switch (opcode) {
 		case 51: // R-type
 			printf("R-type\n");
+			funct3 = (ins & 0x7000) >> 12; // bits 12 to 14
+			funct7 = (ins & 0xFC000000) >> 25; // bits 25 to 31
+			printf("funct3: %b\n", funct3);
+			printf("funct7: %b\n", funct3);
+
 			break;
 		case 3: // I-type
 		case 19:
@@ -39,14 +55,19 @@ int main(int argc, char* argv[]) {
 			printf("U-type\n");
 			break;
 		case 111: // J-type
-			printf("J-type\n");
+			immj = (ins & 0x80000000); // bit 31
+			immj += (ins & 0x7FE00000)  >> 20; // bits 30 to 21
+			immj += (ins & 0x100000) << 9; // bit 20
+			immj += (ins & 0xff000); // bits 19 to 12
+			printf("0x%X: jal, %s, %d\n", address, regs[rd], immj);	
+			// since it's 5 bits, rd will never be out of the array's bounds
 			break;	 
 		default: // unknown opcode
-			printf("Error: unknown opcode %b\n", opcode);
+			printf("0x%X: unknown opcode %b\n", address, opcode);
 			break;
 		}
 
-		//printf("%u\n", opcode);
+		address += 4;
 	}
 	
 	return 0;
