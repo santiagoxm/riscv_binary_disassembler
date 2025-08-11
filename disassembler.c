@@ -7,7 +7,7 @@ const char* regs[] = {"zero", "ra", "sp", "gp", "tp", "t0", "t1", "t2", "s0", "s
 
 int main(int argc, char* argv[]) {
 	if (argc != 2) {
-		printf("Usage: decomp path_to_program\n");
+		printf("Usage: disa path_to_program\n");
 		return 1;
 	}
 
