@@ -20,6 +20,11 @@ int main(int argc, char* argv[]) {
 
 	int fd = open(path, O_RDONLY);
 
+	if (fd == -1) {
+		printf("Error opening file\n");
+		return 1;
+	}
+
 	int address = 0;
 
 	uint8_t opcode;
@@ -31,6 +36,7 @@ int main(int argc, char* argv[]) {
 	int32_t immj;
 	int16_t immi;
 	char* opname;
+	uint32_t immu;
 
 	while (read(fd, (uint8_t*) &ins, 4) != 0) {
 		opcode = ins & 0x7F; // bits 0 to 6
@@ -40,7 +46,7 @@ int main(int argc, char* argv[]) {
 		rs2 = (ins & 0x1f00000) >> 20; // bits 20 to 24
 		funct7 = (ins & 0xFE000000) >> 25; // bits 25 to 31
 		immi = (int32_t)(ins & 0xFFF00000) >> 20; // bits 31 to 20
-		
+		immu = (ins & 0xFFFFF000) >> 12;
 
 		switch (opcode) {
 		case 51: // R-type
@@ -110,11 +116,13 @@ int main(int argc, char* argv[]) {
 		case 99: // B-type
 			printf("B-type\n");
 			break;
-		case 23: // U-type
-		case 55:
-			printf("U-type\n");
+		case 23: // U-type auipc
+			printf("0x%X: auipc %s, 0x%x\n", address, regs[rd], immu);
 			break;
-		case 111: // J-type
+		case 55: // U-type lui
+			printf("0x%X: lui %s, 0x%x\n", address, regs[rd], immu);
+			break;
+		case 111: // J-type jal
 			immj = (int32_t)(ins & 0x80000000) >> 11; // bit 31 (sign extended)
 			immj += (ins & 0x7FE00000)  >> 20; // bits 30 to 21
 			immj += (ins & 0x100000) >> 9; // bit 20
