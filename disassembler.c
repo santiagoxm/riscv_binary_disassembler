@@ -41,6 +41,7 @@ int main(int argc, char* argv[]) {
 	int16_t immb;
 	int32_t immj;
 	char* opname;
+	char prefix[64];
 
 	while (read(fd, (uint8_t*) &ins, 4) != 0) {
 		opcode = ins & 0x7F; // bits 0 to 6
@@ -52,10 +53,12 @@ int main(int argc, char* argv[]) {
 		immi = (int32_t)(ins & 0xFFF00000) >> 20; // bits 31 to 20
 		immu = (ins & 0xFFFFF000) >> 12;
 
+		sprintf(prefix, "0x%02X: ", address);
+
 		switch (opcode) {
 		case 51: // R-type
 			if ((funct7 != 0 && funct7 != 32 && funct7 != 1) || (funct7 == 32 && (funct3 != 0 && funct3 != 5)) || (funct7 == 1 && (funct3 != 0 && funct3 != 4 && funct3 != 6 && funct3 != 7))) {
-				printf("0x%X: unknown R-type instruction %x\n", address, ins);
+				printf("%sunknown R-type instruction %x\n", prefix, ins);
 				break;
 			}
 
@@ -68,22 +71,22 @@ int main(int argc, char* argv[]) {
 				else {opname += 4;}
 			}
 
-			printf("0x%X: %s %s, %s, %s\n", address, opname, regs[rd], regs[rs1], regs[rs2]);
+			printf("%s%s %s, %s, %s\n", prefix, opname, regs[rd], regs[rs1], regs[rs2]);
 
 			break;
 		case 3: // I-type 1
 			if (funct3 > 5 || funct3 == 3) {
-				printf("0x%X: unknown I-type instruction %x\n", address, ins);
+				printf("%sunknown I-type instruction %x\n", prefix, ins);
 				break;
 			}
 		
 			opname = inames1[funct3];
 
-			printf("0x%X: %s %s, %d(%s)\n", address, opname, regs[rd], immi, regs[rs1]);
+			printf("%s%s %s, %d(%s)\n", prefix, opname, regs[rd], immi, regs[rs1]);
 			break;
 		case 19: // I-type 2
 			if ((funct3 == 1 && funct7 != 0) || (funct3 == 5 && (funct7 != 0 && funct7 != 32))) {
-				printf("0x%X: unknown I-type instruction %x\n", address, ins);
+				printf("%sunknown I-type instruction %x\n", prefix, ins);
 				break;
 			}
 
@@ -93,30 +96,30 @@ int main(int argc, char* argv[]) {
 
 			if (funct7 == 32) {opname += 5;}
 
-			printf("0x%X: %s %s, %s, %d\n", address, opname, regs[rd], regs[rs1], immi);
+			printf("%s%s %s, %s, %d\n", prefix, opname, regs[rd], regs[rs1], immi);
 			break;
 		case 103: // I-type jalr
 			if (funct3 == 0) {opname = "jalr";}
 			else{
-				printf("0x%X: unknown I-type instruction %x\n", address, ins);
+				printf("%sunknown I-type instruction %x\n", prefix, ins);
 				break;
 			}
 			
-			printf("0x%X: %s %s, %s, %d\n", address, opname, regs[rd], regs[rs1], immi);
+			printf("%s%s %s, %s, %d\n", prefix, opname, regs[rd], regs[rs1], immi);
 			break;
 		case 115:
 			if (funct3 == 0 && immi == 0) {opname = "ecall";}
 			else if (funct3 == 0 && immi == 1) {opname = "ebreak";}
 			else{
-				printf("0x%X: unknown I-type instruction %x\n", address, ins);
+				printf("%sunknown I-type instruction %x\n", prefix, ins);
 				break;
 			}
 			
-			printf("0x%X: %s\n", address, opname);
+			printf("%s%s\n", prefix, opname);
 			break;
 		case 35: // S-type
 			if (funct3 > 2){
-				printf("0x%X: unknown S-type instruction %x\n", address, ins);
+				printf("%sunknown S-type instruction %x\n", prefix, ins);
 				break;
 			}
 
@@ -125,12 +128,12 @@ int main(int argc, char* argv[]) {
 			imms = (int32_t)(ins & 0xFE000000) >> 20; // bits 25 to 31
 			imms += rd;
 
-			printf("0x%X: %s %s, %d(%s)\n", address, opname, regs[rs2], imms, regs[rs1]);
+			printf("%s%s %s, %d(%s)\n", prefix, opname, regs[rs2], imms, regs[rs1]);
 			
 			break;
 		case 99: // B-type
 			if (funct3 == 2 || funct3 == 3) {
-				printf("0x%X: unknown B-type instruction %x\n", address, ins);
+				printf("%sunknown B-type instruction %x\n", prefix, ins);
 				break;
 			}
 
@@ -141,25 +144,25 @@ int main(int argc, char* argv[]) {
 
 			opname = bnames[funct3];
 
-			printf("0x%X: %s %s, %s, %d\n", address, opname, regs[rs1], regs[rs2], immb);
+			printf("%s%s %s, %s, %d\n", prefix, opname, regs[rs1], regs[rs2], immb);
 			
 			break;
 		case 23: // U-type auipc
-			printf("0x%X: auipc %s, 0x%x\n", address, regs[rd], immu);
+			printf("%sauipc %s, 0x%x\n", prefix, regs[rd], immu);
 			break;
 		case 55: // U-type lui
-			printf("0x%X: lui %s, 0x%x\n", address, regs[rd], immu);
+			printf("%slui %s, 0x%x\n", prefix, regs[rd], immu);
 			break;
 		case 111: // J-type jal
 			immj = (int32_t)(ins & 0x80000000) >> 11; // bit 31 (sign extended)
 			immj += (ins & 0x7FE00000) >> 20; // bits 30 to 21
 			immj += (ins & 0x100000) >> 9; // bit 20
 			immj += (ins & 0xff000); // bits 19 to 12
-			printf("0x%X: jal %s, %d\n", address, regs[rd], immj);
+			printf("%sjal %s, %d\n", prefix, regs[rd], immj);
 			// since it's 5 bits, rd will never be out of the array's bounds
 			break;	 
 		default: // unknown opcode
-			printf("0x%X: unknown opcode %b\n", address, opcode);
+			printf("%sunknown opcode %b\n", prefix, opcode);
 			break;
 		}
 
