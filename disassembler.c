@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
 	char* opname;
 	char prefix[64];
 
-	while (read(fd, (uint8_t*) &ins, 4) != 0) {
+	while (read(fd, (uint8_t*) &ins, 4) == 4) {
 		opcode = ins & 0x7F; // bits 0 to 6
 		rd = (ins & 0xF80) >> 7; // bits 7 to 11
 		funct3 = (ins & 0x7000) >> 12; // bits 12 to 14
@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
 			if ((funct7 != 0 && funct7 != 32 && funct7 != 1) || 
 			   (funct7 == 32 && (funct3 != 0 && funct3 != 5)) || 
 			   (funct7 == 1 && (funct3 != 0 && funct3 != 4 && funct3 != 6 && funct3 != 7))) {
-				printf("%sunknown R-type instruction 0x%x\n", prefix, ins);
+				printf("%sunknown R-type instruction 0x%08x\n", prefix, ins);
 				break;
 			}
 
@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
 			break;
 		case 3: // I-type 1
 			if (funct3 > 5 || funct3 == 3) {
-				printf("%sunknown I-type instruction 0x%x\n", prefix, ins);
+				printf("%sunknown I-type instruction 0x%08x\n", prefix, ins);
 				break;
 			}
 		
@@ -106,7 +106,7 @@ int main(int argc, char* argv[]) {
 			break;
 		case 19: // I-type 2
 			if ((funct3 == 1 && funct7 != 0) || (funct3 == 5 && (funct7 != 0 && funct7 != 32))) {
-				printf("%sunknown I-type instruction 0x%x\n", prefix, ins);
+				printf("%sunknown I-type instruction 0x%08x\n", prefix, ins);
 				break;
 			}
 
@@ -121,7 +121,7 @@ int main(int argc, char* argv[]) {
 		case 103: // I-type jalr
 			if (funct3 == 0) {opname = "jalr";}
 			else{
-				printf("%sunknown I-type instruction 0x%x\n", prefix, ins);
+				printf("%sunknown I-type instruction 0x%08x\n", prefix, ins);
 				break;
 			}
 			
@@ -131,7 +131,7 @@ int main(int argc, char* argv[]) {
 			if (funct3 == 0 && immi == 0) {opname = "ecall";}
 			else if (funct3 == 0 && immi == 1) {opname = "ebreak";}
 			else{
-				printf("%sunknown I-type instruction 0x%x\n", prefix, ins);
+				printf("%sunknown I-type instruction 0x%08x\n", prefix, ins);
 				break;
 			}
 			
@@ -139,7 +139,7 @@ int main(int argc, char* argv[]) {
 			break;
 		case 35: // S-type
 			if (funct3 > 2){
-				printf("%sunknown S-type instruction 0x%x\n", prefix, ins);
+				printf("%sunknown S-type instruction 0x%08x\n", prefix, ins);
 				break;
 			}
 
@@ -153,7 +153,7 @@ int main(int argc, char* argv[]) {
 			break;
 		case 99: // B-type
 			if (funct3 == 2 || funct3 == 3) {
-				printf("%sunknown B-type instruction 0x%x\n", prefix, ins);
+				printf("%sunknown B-type instruction 0x%08x\n", prefix, ins);
 				break;
 			}
 
@@ -182,7 +182,7 @@ int main(int argc, char* argv[]) {
 			// since it's 5 bits, rd will never be out of the array's bounds
 			break;	 
 		default: // unknown opcode
-			printf("%sunknown opcode 0x%x\n", prefix, opcode);
+			printf("%sunknown instruction 0x%08x\n", prefix, ins);
 			break;
 		}
 
