@@ -52,9 +52,7 @@ int main(int argc, char* argv[]) {
 			opname = rnames[funct3];
 
 			if (funct7 == 32) {opname += 4;}
-
-			printf("funct7: %d\n", funct7);
-
+			
 			if (funct7 == 1) {
 				if (funct3 == 0) {opname += 8;}
 				else {opname += 4;}
