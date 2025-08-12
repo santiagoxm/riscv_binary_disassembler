@@ -2,6 +2,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <inttypes.h> 
+#include <string.h> 
 
 char* regs[] = {"zero", "ra", "sp", "gp", "tp", "t0", "t1", "t2", "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"};
 char* rnames[] = {"add\0sub\0mul", "sll", "slt", "sltu", "xor\0div", "srl\0sra", "or\0\0rem", "and\0remu"};
@@ -10,20 +11,30 @@ char* inames2[] = {"addi", "slli", "slti", "sltiu", "xori", "srli\0srai", "ori",
 char* snames[] = {"sb", "sh", "sw"};
 char* bnames[] = {"beq", "bne", "", "", "blt", "bge", "bltu", "bgeu"};
 
+char* prefix_format = "0x%04X: ";
+
 int main(int argc, char* argv[]) {
-	if (argc != 2) {
-		printf("Usage: disa path_to_program\n");
+	if (argc != 2 && argc != 3) {
+		printf("Usage: disa [file] [options]\nOptions:\n -a    no addresses\n");
 		return 1;
 	}
+
+	if (argc == 3 && strcmp(argv[2], "-a") == 0) {prefix_format = "";}
 
 	char* path = argv[1];
 		
 	uint32_t ins = 0;
 
-	int fd = open(path, O_RDONLY);
+	int fd = open(path, O_RDONLY); 
+	// write access is the easiest way to make sure it's not a directory
+
+	if (open(path, O_DIRECTORY) != -1) {
+		printf("Couldn't open '%s' since it's a directory\n", path);
+		return 1;
+	}
 
 	if (fd == -1) {
-		printf("Error opening file\n");
+		printf("Couldn't open file '%s'\n", path);
 		return 1;
 	}
 
@@ -53,7 +64,7 @@ int main(int argc, char* argv[]) {
 		immi = (int32_t)(ins & 0xFFF00000) >> 20; // bits 31 to 20
 		immu = (ins & 0xFFFFF000) >> 12;
 
-		sprintf(prefix, "0x%02X: ", address);
+		sprintf(prefix, prefix_format, address);
 
 		switch (opcode) {
 		case 51: // R-type
