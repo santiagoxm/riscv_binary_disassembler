@@ -8,6 +8,7 @@ char* rnames[] = {"add\0sub\0mul", "sll", "slt", "sltu", "xor\0div", "srl\0sra",
 char* inames1[] = {"lb", "lh", "lw", "", "lbu","lhu"};
 char* inames2[] = {"addi", "slli", "slti", "sltiu", "xori", "srli\0srai", "ori", "andi"};
 char* snames[] = {"sb", "sh", "sw"};
+char* bnames[] = {"beq", "bne", "", "", "blt", "bge", "bltu", "bgeu"};
 
 int main(int argc, char* argv[]) {
 	if (argc != 2) {
@@ -34,11 +35,12 @@ int main(int argc, char* argv[]) {
 	uint8_t rs1;
 	uint8_t rs2;
 	uint8_t funct7;
-	int32_t immj;
 	int16_t immi;
-	char* opname;
 	uint32_t immu;
 	int16_t imms;
+	int16_t immb;
+	int32_t immj;
+	char* opname;
 
 	while (read(fd, (uint8_t*) &ins, 4) != 0) {
 		opcode = ins & 0x7F; // bits 0 to 6
@@ -127,7 +129,20 @@ int main(int argc, char* argv[]) {
 			
 			break;
 		case 99: // B-type
-			printf("B-type\n");
+			if (funct3 == 2 || funct3 == 3) {
+				printf("0x%X: unknown B-type instruction %x\n", address, ins);
+				break;
+			}
+
+			immb = (int32_t)(ins & 0x80000000) >> 19; // bit 31, sign extended
+			immb += (ins & 0x7E000000) >> 20; // bit 30 to 25
+			immb += (ins & 0xF00) >> 7; // bits 11 to 8
+			immb += (ins & 0x80) << 4; // bit 7
+
+			opname = bnames[funct3];
+
+			printf("0x%X: %s %s, %s, %d\n", address, opname, regs[rs1], regs[rs2], immb);
+			
 			break;
 		case 23: // U-type auipc
 			printf("0x%X: auipc %s, 0x%x\n", address, regs[rd], immu);
@@ -137,7 +152,7 @@ int main(int argc, char* argv[]) {
 			break;
 		case 111: // J-type jal
 			immj = (int32_t)(ins & 0x80000000) >> 11; // bit 31 (sign extended)
-			immj += (ins & 0x7FE00000)  >> 20; // bits 30 to 21
+			immj += (ins & 0x7FE00000) >> 20; // bits 30 to 21
 			immj += (ins & 0x100000) >> 9; // bit 20
 			immj += (ins & 0xff000); // bits 19 to 12
 			printf("0x%X: jal %s, %d\n", address, regs[rd], immj);
