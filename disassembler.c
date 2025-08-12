@@ -13,13 +13,21 @@ char* bnames[] = {"beq", "bne", "", "", "blt", "bge", "bltu", "bgeu"};
 
 char* prefix_format = "0x%04X: ";
 
+char* usage = "Usage: disa [file] [options]\nOptions:\n -a    no addresses\n";
+
 int main(int argc, char* argv[]) {
 	if (argc != 2 && argc != 3) {
-		printf("Usage: disa [file] [options]\nOptions:\n -a    no addresses\n");
+		printf(usage);
 		return 1;
 	}
 
-	if (argc == 3 && strcmp(argv[2], "-a") == 0) {prefix_format = "";}
+	if (argc == 3) {
+		if(strcmp(argv[2], "-a") == 0) {prefix_format = "";}
+		else {
+			printf(usage);
+			return 1;
+		}
+	} 
 
 	char* path = argv[1];
 		
