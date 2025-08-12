@@ -4,7 +4,7 @@
 #include <inttypes.h> 
 
 char* regs[] = {"zero", "ra", "sp", "gp", "tp", "t0", "t1", "t2", "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"};
-char* rnames[] = {"add\0sub", "sll", "slt", "sltu", "xor", "srl\0sra", "or", "and"};
+char* rnames[] = {"add\0sub\0mul", "sll", "slt", "sltu", "xor\0div", "srl\0sra", "or\0\0rem", "and\0remu"};
 char* inames1[] = {"lb", "lh", "lw", "", "lbu","lhu"};
 char* inames2[] = {"addi", "slli", "slti", "sltiu", "xori", "srli\0srai", "ori", "andi"};
 
@@ -38,13 +38,13 @@ int main(int argc, char* argv[]) {
 		funct3 = (ins & 0x7000) >> 12; // bits 12 to 14
 		rs1 = (ins & 0xf8000) >> 15; // bits 15 to 19
 		rs2 = (ins & 0x1f00000) >> 20; // bits 20 to 24
-		funct7 = (ins & 0xFC000000) >> 25; // bits 25 to 31
+		funct7 = (ins & 0xFE000000) >> 25; // bits 25 to 31
 		immi = (int32_t)(ins & 0xFFF00000) >> 20; // bits 31 to 20
 		
 
 		switch (opcode) {
 		case 51: // R-type
-			if (funct3 > 7 || (funct7 != 0 && funct7 != 32) || (funct7 == 32 && (funct3 != 0 && funct3 != 5))) {
+			if ((funct7 != 0 && funct7 != 32 && funct7 != 1) || (funct7 == 32 && (funct3 != 0 && funct3 != 5)) || (funct7 == 1 && (funct3 != 0 && funct3 != 4 && funct3 != 6 && funct3 != 7))) {
 				printf("0x%X: unknown R-type instruction %x\n", address, ins);
 				break;
 			}
@@ -52,6 +52,13 @@ int main(int argc, char* argv[]) {
 			opname = rnames[funct3];
 
 			if (funct7 == 32) {opname += 4;}
+
+			printf("funct7: %d\n", funct7);
+
+			if (funct7 == 1) {
+				if (funct3 == 0) {opname += 8;}
+				else {opname += 4;}
+			}
 
 			printf("0x%X: %s %s, %s, %s\n", address, opname, regs[rd], regs[rs1], regs[rs2]);
 
@@ -67,7 +74,7 @@ int main(int argc, char* argv[]) {
 			printf("0x%X: %s %s, %d(%s)\n", address, opname, regs[rd], immi, regs[rs1]);
 			break;
 		case 19: // I-type 2
-			if (funct3 > 7 || (funct3 == 1 && funct7 != 0) || (funct3 == 5 && (funct7 != 0 && funct7 != 32))) {
+			if ((funct3 == 1 && funct7 != 0) || (funct3 == 5 && (funct7 != 0 && funct7 != 32))) {
 				printf("0x%X: unknown I-type instruction %x\n", address, ins);
 				break;
 			}

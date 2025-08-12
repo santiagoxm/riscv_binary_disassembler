@@ -1,2 +1,2 @@
 # riscv_disassembler
-A RV32I disassembler written in C.
+A RV32IM disassembler written in C.
