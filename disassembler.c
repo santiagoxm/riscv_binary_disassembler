@@ -33,13 +33,12 @@ int main(int argc, char* argv[]) {
 		
 	uint32_t ins = 0;
 
-	int fd = open(path, O_RDONLY); 
-	// write access is the easiest way to make sure it's not a directory
-
 	if (open(path, O_DIRECTORY) != -1) {
 		printf("Couldn't open '%s' since it's a directory\n", path);
 		return 1;
 	}
+
+	int fd = open(path, O_RDONLY); 
 
 	if (fd == -1) {
 		printf("Couldn't open file '%s'\n", path);
