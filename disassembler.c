@@ -7,6 +7,7 @@ char* regs[] = {"zero", "ra", "sp", "gp", "tp", "t0", "t1", "t2", "s0", "s1", "a
 char* rnames[] = {"add\0sub\0mul", "sll", "slt", "sltu", "xor\0div", "srl\0sra", "or\0\0rem", "and\0remu"};
 char* inames1[] = {"lb", "lh", "lw", "", "lbu","lhu"};
 char* inames2[] = {"addi", "slli", "slti", "sltiu", "xori", "srli\0srai", "ori", "andi"};
+char* snames[] = {"sb", "sh", "sw"};
 
 int main(int argc, char* argv[]) {
 	if (argc != 2) {
@@ -37,6 +38,7 @@ int main(int argc, char* argv[]) {
 	int16_t immi;
 	char* opname;
 	uint32_t immu;
+	int16_t imms;
 
 	while (read(fd, (uint8_t*) &ins, 4) != 0) {
 		opcode = ins & 0x7F; // bits 0 to 6
@@ -111,7 +113,18 @@ int main(int argc, char* argv[]) {
 			printf("0x%X: %s\n", address, opname);
 			break;
 		case 35: // S-type
-			printf("S-type\n");
+			if (funct3 > 2){
+				printf("0x%X: unknown S-type instruction %x\n", address, ins);
+				break;
+			}
+
+			opname = snames[funct3];
+
+			imms = (int32_t)(ins & 0xFE000000) >> 20; // bits 25 to 31
+			imms += rd;
+
+			printf("0x%X: %s %s, %d(%s)\n", address, opname, regs[rs2], imms, regs[rs1]);
+			
 			break;
 		case 99: // B-type
 			printf("B-type\n");
