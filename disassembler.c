@@ -33,12 +33,15 @@ int main(int argc, char* argv[]) {
 		
 	uint32_t ins = 0;
 
-	if (open(path, O_DIRECTORY) != -1) {
+	int fd = open(path, O_DIRECTORY);
+
+	if (fd != -1) {
 		printf("Couldn't open '%s' since it's a directory\n", path);
+		close(fd);
 		return 1;
 	}
 
-	int fd = open(path, O_RDONLY); 
+	fd = open(path, O_RDONLY); 
 
 	if (fd == -1) {
 		printf("Couldn't open file '%s'\n", path);
@@ -188,6 +191,8 @@ int main(int argc, char* argv[]) {
 
 		address += 4;
 	}
+
+	close(fd);
 	
 	return 0;
 }
