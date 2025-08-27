@@ -15,39 +15,8 @@ char* prefix_format = "0x%04X: ";
 
 char* usage = "Usage: disa [file] [options]\nOptions:\n -a    no addresses\n";
 
-int main(int argc, char* argv[]) {
-	if (argc != 2 && argc != 3) {
-		printf(usage);
-		return 1;
-	}
-
-	if (argc == 3) {
-		if(strcmp(argv[2], "-a") == 0) {prefix_format = "";}
-		else {
-			printf(usage);
-			return 1;
-		}
-	} 
-
-	char* path = argv[1];
-		
+void disassemble(int fd) {
 	uint32_t ins = 0;
-
-	int fd = open(path, O_DIRECTORY);
-
-	if (fd != -1) {
-		printf("Couldn't open '%s' since it's a directory\n", path);
-		close(fd);
-		return 1;
-	}
-
-	fd = open(path, O_RDONLY); 
-
-	if (fd == -1) {
-		printf("Couldn't open file '%s'\n", path);
-		return 1;
-	}
-
 	int address = 0;
 
 	uint8_t opcode;
@@ -193,6 +162,41 @@ int main(int argc, char* argv[]) {
 	}
 
 	close(fd);
-	
+
+}
+
+int main(int argc, char* argv[]) {
+	if (argc != 2 && argc != 3) {
+		printf(usage);
+		return 1;
+	}
+
+	if (argc == 3) {
+		if(strcmp(argv[2], "-a") == 0) {prefix_format = "";}
+		else {
+			printf(usage);
+			return 1;
+		}
+	} 
+
+	char* path = argv[1];
+
+	int fd = open(path, O_DIRECTORY);
+
+	if (fd != -1) {
+		printf("Couldn't open '%s' since it's a directory\n", path);
+		close(fd);
+		return 1;
+	}
+
+	fd = open(path, O_RDONLY); 
+
+	if (fd == -1) {
+		printf("Couldn't open file '%s'\n", path);
+		return 1;
+	}
+
+	disassemble(fd);
+
 	return 0;
 }
